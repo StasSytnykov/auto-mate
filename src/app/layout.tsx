@@ -25,21 +25,18 @@ export default function RootLayout({
   return (
     <html lang="uk">
       <head>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta name="theme-color" content="#0a0f1a" />
       </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} font-sans min-h-screen`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} font-sans min-h-screen`}>
         <Header />
         <main>{children}</main>
         <footer className="border-t border-slate-800 py-6 text-center text-sm text-slate-500">
           <div className="container mx-auto px-4">
-            <p>© {new Date().getFullYear()} {siteConfig.name}. Всі права захищені.</p>
+            <p>
+              © {new Date().getFullYear()} {siteConfig.name}. Всі права захищені.
+            </p>
             <p className="mt-1 text-xs text-slate-600">
               AI-аналіз надається лише для інформаційних цілей. Завжди проводьте професійну діагностику перед покупкою.
             </p>

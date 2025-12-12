@@ -18,6 +18,9 @@ const ratelimit =
     : null;
 
 export async function POST(request: NextRequest) {
+  // Track rate limit remaining for response headers
+  let rateLimitRemaining: number | null = null;
+
   try {
     // Apply rate limiting if configured
     if (ratelimit) {
@@ -29,7 +32,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error: 'Ліміт вичерпано',
-            message: `Ви використали всі безкоштовні аналізи на сьогодні (5/день). Спробуйте після ${resetDate.toLocaleTimeString('uk-UA')}.`,
+            message: `Ви використали всі безкоштовні аналізи на сьогодні (5/день). Спробуйте після ${resetDate.toLocaleTimeString(
+              'uk-UA'
+            )}.`,
             remaining: 0,
             resetAt: reset,
           },
@@ -43,8 +48,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Add rate limit info to response headers
-      request.headers.set('X-RateLimit-Remaining', remaining.toString());
+      rateLimitRemaining = remaining;
     }
 
     const body = await request.json();
@@ -82,7 +86,13 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     };
 
-    return NextResponse.json(result);
+    // Include rate limit info in response headers if available
+    const headers: Record<string, string> = {};
+    if (rateLimitRemaining !== null) {
+      headers['X-RateLimit-Remaining'] = rateLimitRemaining.toString();
+    }
+
+    return NextResponse.json(result, { headers });
   } catch (error) {
     console.error('Analysis error:', error);
 
@@ -95,4 +105,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-
