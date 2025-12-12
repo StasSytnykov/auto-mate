@@ -160,10 +160,6 @@ function decodeYearFromVIN(vin: string): number | null {
 
   if (!baseYear) return null;
 
-  // For letters, we need to determine the cycle (1980-2009 or 2010-2039)
-  // Check position 7 for assembly plant hints or assume recent for European cars
-  const firstChar = vin.charAt(0).toUpperCase();
-
   // If the year code gives us 2001-2009, it could also be 1971-1979 or 2031-2039
   // For modern cars (first char W, V, etc.), assume 2000s
   if (baseYear >= 2001 && baseYear <= 2009) {

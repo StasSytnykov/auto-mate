@@ -194,7 +194,7 @@ export function AnalysisResult({ result, isLoading }: AnalysisResultProps) {
           }`,
           url: window.location.href,
         });
-      } catch (err) {
+      } catch {
         // User cancelled or share failed
         console.log('Share cancelled');
       }
@@ -242,9 +242,6 @@ export function AnalysisResult({ result, isLoading }: AnalysisResultProps) {
                 <Share2 className="h-4 w-4 mr-1" />
                 Поділитися
               </Button>
-              <Badge variant="secondary" className="bg-blue-500/20 text-blue-400">
-                Powered by Gemini
-              </Badge>
             </div>
           </div>
         </CardHeader>

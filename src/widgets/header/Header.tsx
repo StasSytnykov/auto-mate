@@ -1,5 +1,4 @@
-import { Car, Sparkles } from 'lucide-react';
-import { Badge } from '@/shared/ui/badge';
+import { Car } from 'lucide-react';
 
 export function Header() {
   return (
@@ -14,15 +13,7 @@ export function Header() {
             <span className="text-blue-400">Mate</span>
           </span>
         </div>
-        <Badge
-          variant="outline"
-          className="border-slate-700 bg-slate-800/50 text-slate-400 gap-1.5"
-        >
-          <Sparkles className="h-3 w-3" />
-          Powered by Gemini
-        </Badge>
       </div>
     </header>
   );
 }
-
