@@ -1,0 +1,39 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#0a0f1a"/>
+  <rect x="0" y="0" width="1200" height="630" fill="url(#gradient)"/>
+  
+  <!-- Car Icon -->
+  <g transform="translate(540, 200)">
+    <rect x="20" y="20" width="80" height="80" rx="16" fill="url(#iconGradient)"/>
+    <path d="M60 45C54.477 45 50 49.477 50 55V65H70V55C70 49.477 65.523 45 60 45Z" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M45 65H75" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="52" cy="72" r="4" fill="white"/>
+    <circle cx="68" cy="72" r="4" fill="white"/>
+  </g>
+  
+  <!-- Title -->
+  <text x="600" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">
+    <tspan fill="white">Auto</tspan><tspan fill="#60a5fa">Mate</tspan>
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="400" font-family="system-ui, -apple-system, sans-serif" font-size="32" fill="#94a3b8" text-anchor="middle">
+    AI 5@52V@:0 1/2 2B><>1V;V2
+  </text>
+  
+  <!-- Tagline -->
+  <text x="600" y="460" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#64748b" text-anchor="middle">
+    =0;V7 VIN " 8O2;5==O ?@>1;5< "  5:><5=40FVW
+  </text>
+  
+  <defs>
+    <linearGradient id="gradient" x1="0" y1="0" x2="1200" y2="630">
+      <stop offset="0%" stop-color="#0a0f1a"/>
+      <stop offset="100%" stop-color="#1e293b"/>
+    </linearGradient>
+    <linearGradient id="iconGradient" x1="20" y1="20" x2="100" y2="100">
+      <stop offset="0%" stop-color="#3b82f6"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+</svg>

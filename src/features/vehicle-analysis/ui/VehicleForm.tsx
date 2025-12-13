@@ -115,11 +115,11 @@ export function VehicleForm({
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5" noValidate>
           {/* VIN Code - Required */}
           <div className="space-y-2">
             <Label htmlFor="vin" className="text-slate-300">
-              VIN Код <span className="text-red-400">*</span>
+              VIN Код <span className="text-red-400" aria-label="обов'язкове поле">*</span>
             </Label>
             <Input
               id="vin"
@@ -130,9 +130,13 @@ export function VehicleForm({
               maxLength={17}
               className="border-slate-600 bg-slate-700/50 font-mono uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal"
               aria-invalid={!!errors.vin}
+              aria-describedby={errors.vin ? 'vin-error' : undefined}
+              required
             />
             {errors.vin && (
-              <p className="text-sm text-red-400">{errors.vin}</p>
+              <p id="vin-error" role="alert" className="text-sm text-red-400">
+                {errors.vin}
+              </p>
             )}
           </div>
 
@@ -165,9 +169,13 @@ export function VehicleForm({
                 min={1980}
                 max={new Date().getFullYear() + 1}
                 className="border-slate-600 bg-slate-700/50"
+                aria-invalid={!!errors.year}
+                aria-describedby={errors.year ? 'year-error' : undefined}
               />
               {errors.year && (
-                <p className="text-sm text-red-400">{errors.year}</p>
+                <p id="year-error" role="alert" className="text-sm text-red-400">
+                  {errors.year}
+                </p>
               )}
             </div>
           </div>
@@ -187,9 +195,13 @@ export function VehicleForm({
                 onChange={handleChange}
                 min={0}
                 className="border-slate-600 bg-slate-700/50"
+                aria-invalid={!!errors.mileage}
+                aria-describedby={errors.mileage ? 'mileage-error' : undefined}
               />
               {errors.mileage && (
-                <p className="text-sm text-red-400">{errors.mileage}</p>
+                <p id="mileage-error" role="alert" className="text-sm text-red-400">
+                  {errors.mileage}
+                </p>
               )}
             </div>
             <div className="space-y-2">
@@ -205,9 +217,13 @@ export function VehicleForm({
                 onChange={handleChange}
                 min={0}
                 className="border-slate-600 bg-slate-700/50"
+                aria-invalid={!!errors.price}
+                aria-describedby={errors.price ? 'price-error' : undefined}
               />
               {errors.price && (
-                <p className="text-sm text-red-400">{errors.price}</p>
+                <p id="price-error" role="alert" className="text-sm text-red-400">
+                  {errors.price}
+                </p>
               )}
             </div>
           </div>
@@ -228,9 +244,13 @@ export function VehicleForm({
               onChange={handleChange}
               rows={4}
               className="border-slate-600 bg-slate-700/50 resize-none"
+              aria-invalid={!!errors.sellerDescription}
+              aria-describedby={errors.sellerDescription ? 'sellerDescription-error' : undefined}
             />
             {errors.sellerDescription && (
-              <p className="text-sm text-red-400">{errors.sellerDescription}</p>
+              <p id="sellerDescription-error" role="alert" className="text-sm text-red-400">
+                {errors.sellerDescription}
+              </p>
             )}
           </div>
 
@@ -251,15 +271,23 @@ export function VehicleForm({
               onChange={handleChange}
               rows={2}
               className="border-slate-600 bg-slate-700/50 resize-none"
+              aria-invalid={!!errors.userQuestion}
+              aria-describedby={errors.userQuestion ? 'userQuestion-error' : undefined}
             />
             {errors.userQuestion && (
-              <p className="text-sm text-red-400">{errors.userQuestion}</p>
+              <p id="userQuestion-error" role="alert" className="text-sm text-red-400">
+                {errors.userQuestion}
+              </p>
             )}
           </div>
 
           {/* Submit Error */}
           {errors.submit && (
-            <div className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400">
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400"
+            >
               {errors.submit}
             </div>
           )}

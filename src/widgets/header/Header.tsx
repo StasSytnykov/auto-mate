@@ -1,19 +1,27 @@
+import Link from 'next/link';
 import { Car } from 'lucide-react';
 
 export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-800 bg-slate-900/80 backdrop-blur-xl">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600">
-            <Car className="h-5 w-5 text-white" />
+      <nav className="container mx-auto flex h-16 items-center justify-between px-4" aria-label="Головна навігація">
+        <Link
+          href="/"
+          className="flex items-center gap-3 transition-opacity hover:opacity-80"
+          aria-label="AutoMate - Головна сторінка"
+        >
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-600"
+            aria-hidden="true"
+          >
+            <Car className="h-5 w-5 text-white" aria-hidden="true" />
           </div>
           <span className="text-xl font-bold">
             <span className="text-white">Auto</span>
             <span className="text-blue-400">Mate</span>
           </span>
-        </div>
-      </div>
+        </Link>
+      </nav>
     </header>
   );
 }

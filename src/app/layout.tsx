@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 import { Header } from '@/widgets/header';
-import { defaultMetadata, jsonLd, siteConfig } from '@/shared/config/seo';
+import { defaultMetadata, jsonLd, faqSchema, siteConfig } from '@/shared/config/seo';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -25,8 +25,14 @@ export default function RootLayout({
   return (
     <html lang="uk">
       <head>
+        {/* Structured Data */}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
+        {/* Favicon and Icons */}
         <link rel="icon" href="/favicon.ico" sizes="any" />
+        <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+        {/* TODO: Add apple-touch-icon.png (180x180px) for iOS devices */}
+        {/* Theme */}
         <meta name="theme-color" content="#0a0f1a" />
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans min-h-screen`}>

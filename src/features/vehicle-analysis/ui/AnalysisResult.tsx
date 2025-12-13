@@ -204,58 +204,72 @@ export function AnalysisResult({ result, isLoading }: AnalysisResultProps) {
     }
   };
 
+  const articleTitle = result.decodedVIN
+    ? `Аналіз ${result.decodedVIN.make} ${result.decodedVIN.model} ${result.decodedVIN.year || ''}`
+    : 'Аналіз автомобіля';
+
   return (
-    <div className="space-y-6">
+    <article aria-label={articleTitle} className="space-y-6">
       {/* Decoded VIN Info */}
-      {result.decodedVIN && <DecodedVINCard vin={result.decodedVIN} />}
+      {result.decodedVIN && (
+        <section aria-label="Декодований VIN">
+          <DecodedVINCard vin={result.decodedVIN} />
+        </section>
+      )}
 
       {/* AI Analysis */}
-      <Card className="border-slate-700/50 bg-slate-800/30">
-        <CardHeader className="border-b border-slate-700/50">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg text-slate-200">AI Аналіз</CardTitle>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopy}
-                className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 mr-1 text-green-400" />
-                    <span className="text-green-400">Скопійовано</span>
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-1" />
-                    Копіювати
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleShare}
-                className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-              >
-                <Share2 className="h-4 w-4 mr-1" />
-                Поділитися
-              </Button>
+      <section aria-label="AI Аналіз">
+        <Card className="border-slate-700/50 bg-slate-800/30">
+          <CardHeader className="border-b border-slate-700/50">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg text-slate-200">AI Аналіз</CardTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+                  aria-label={copied ? 'Скопійовано в буфер обміну' : 'Копіювати аналіз'}
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1 text-green-400" aria-hidden="true" />
+                      <span className="text-green-400">Скопійовано</span>
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1" aria-hidden="true" />
+                      Копіювати
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+                  aria-label="Поділитися аналізом"
+                >
+                  <Share2 className="h-4 w-4 mr-1" aria-hidden="true" />
+                  Поділитися
+                </Button>
+              </div>
             </div>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="prose prose-invert prose-slate max-w-none prose-headings:text-slate-200 prose-p:text-slate-300 prose-li:text-slate-300 prose-strong:text-slate-200 prose-a:text-blue-400">
-            <ReactMarkdown>{result.analysis}</ReactMarkdown>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="pt-6">
+            <div className="prose prose-invert prose-slate max-w-none prose-headings:text-slate-200 prose-p:text-slate-300 prose-li:text-slate-300 prose-strong:text-slate-200 prose-a:text-blue-400">
+              <ReactMarkdown>{result.analysis}</ReactMarkdown>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Timestamp */}
-      <p className="text-center text-xs text-slate-600">
-        Аналіз виконано: {new Date(result.timestamp).toLocaleString('uk-UA')}
-      </p>
-    </div>
+      <footer className="text-center">
+        <time dateTime={result.timestamp} className="text-xs text-slate-600">
+          Аналіз виконано: {new Date(result.timestamp).toLocaleString('uk-UA')}
+        </time>
+      </footer>
+    </article>
   );
 }
