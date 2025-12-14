@@ -23,7 +23,6 @@ export interface DecodedVIN {
   plantCity: string;
   errorCode?: string;
   errorText?: string;
-  // Metadata from enhanced decoder
   checksumValid?: boolean;
   isEuropeanVIN?: boolean;
   decodingSource?: 'nhtsa' | 'local';
@@ -33,6 +32,15 @@ export interface AnalysisResult {
   decodedVIN: DecodedVIN | null;
   analysis: string;
   timestamp: string;
+}
+
+export interface StreamingAnalysisState {
+  decodedVIN: DecodedVIN | null;
+  streamedText: string;
+  isDecodingVIN: boolean;
+  isStreaming: boolean;
+  isComplete: boolean;
+  error: string | null;
 }
 
 export type RecommendationType = 'recommend' | 'caution' | 'not_recommend';

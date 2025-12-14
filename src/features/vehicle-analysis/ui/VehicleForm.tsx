@@ -8,19 +8,15 @@ import { Textarea } from '@/shared/ui/textarea';
 import { Label } from '@/shared/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { vehicleFormSchema } from '../model/schemas';
-import { VehicleFormData, AnalysisResult } from '../model/types';
+import { VehicleFormData } from '../model/types';
 
 interface VehicleFormProps {
-  onAnalysisComplete: (result: AnalysisResult) => void;
-  onAnalysisStart: () => void;
+  onSubmit: (formData: VehicleFormData) => Promise<void>;
   isLoading: boolean;
+  error?: string | null;
 }
 
-export function VehicleForm({
-  onAnalysisComplete,
-  onAnalysisStart,
-  isLoading,
-}: VehicleFormProps) {
+export function VehicleForm({ onSubmit, isLoading, error: externalError }: VehicleFormProps) {
   const [formData, setFormData] = useState<Partial<VehicleFormData>>({
     vin: '',
     makeModel: '',
@@ -32,9 +28,7 @@ export function VehicleForm({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
 
     let parsedValue: string | number | undefined = value;
@@ -50,7 +44,7 @@ export function VehicleForm({
       [name]: parsedValue,
     }));
 
-    // Clear error for this field
+    // Clear erro for this field
     if (errors[name]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -63,7 +57,6 @@ export function VehicleForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validate form
     const result = vehicleFormSchema.safeParse(formData);
 
     if (!result.success) {
@@ -77,32 +70,15 @@ export function VehicleForm({
       return;
     }
 
-    onAnalysisStart();
+    // Clear previous errors
+    setErrors({});
 
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(result.data),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Analysis failed');
-      }
-
-      onAnalysisComplete(data);
-    } catch (error) {
-      console.error('Submit error:', error);
-      setErrors({
-        submit:
-          error instanceof Error ? error.message : 'Помилка при аналізі авто',
-      });
-    }
+    // Call the parent's onSubmit with validated data
+    await onSubmit(result.data);
   };
+
+  // Combine external and internal errors
+  const submitError = externalError || errors.submit;
 
   return (
     <Card className="border-slate-700/50 bg-slate-800/50 backdrop-blur-sm">
@@ -119,7 +95,10 @@ export function VehicleForm({
           {/* VIN Code - Required */}
           <div className="space-y-2">
             <Label htmlFor="vin" className="text-slate-300">
-              VIN Код <span className="text-red-400" aria-label="обов'язкове поле">*</span>
+              VIN Код{' '}
+              <span className="text-red-400" aria-label="обов'язкове поле">
+                *
+              </span>
             </Label>
             <Input
               id="vin"
@@ -132,6 +111,7 @@ export function VehicleForm({
               aria-invalid={!!errors.vin}
               aria-describedby={errors.vin ? 'vin-error' : undefined}
               required
+              disabled={isLoading}
             />
             {errors.vin && (
               <p id="vin-error" role="alert" className="text-sm text-red-400">
@@ -153,6 +133,7 @@ export function VehicleForm({
                 value={formData.makeModel || ''}
                 onChange={handleChange}
                 className="border-slate-600 bg-slate-700/50"
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
@@ -171,6 +152,7 @@ export function VehicleForm({
                 className="border-slate-600 bg-slate-700/50"
                 aria-invalid={!!errors.year}
                 aria-describedby={errors.year ? 'year-error' : undefined}
+                disabled={isLoading}
               />
               {errors.year && (
                 <p id="year-error" role="alert" className="text-sm text-red-400">
@@ -197,6 +179,7 @@ export function VehicleForm({
                 className="border-slate-600 bg-slate-700/50"
                 aria-invalid={!!errors.mileage}
                 aria-describedby={errors.mileage ? 'mileage-error' : undefined}
+                disabled={isLoading}
               />
               {errors.mileage && (
                 <p id="mileage-error" role="alert" className="text-sm text-red-400">
@@ -219,6 +202,7 @@ export function VehicleForm({
                 className="border-slate-600 bg-slate-700/50"
                 aria-invalid={!!errors.price}
                 aria-describedby={errors.price ? 'price-error' : undefined}
+                disabled={isLoading}
               />
               {errors.price && (
                 <p id="price-error" role="alert" className="text-sm text-red-400">
@@ -231,10 +215,7 @@ export function VehicleForm({
           {/* Seller Description */}
           <div className="space-y-2">
             <Label htmlFor="sellerDescription" className="text-slate-300">
-              Опис продавця / Деталі стану{' '}
-              <span className="text-slate-500">
-                (скопіюйте опис з оголошення сюди)
-              </span>
+              Опис продавця / Деталі стану <span className="text-slate-500">(скопіюйте опис з оголошення сюди)</span>
             </Label>
             <Textarea
               id="sellerDescription"
@@ -246,6 +227,7 @@ export function VehicleForm({
               className="border-slate-600 bg-slate-700/50 resize-none"
               aria-invalid={!!errors.sellerDescription}
               aria-describedby={errors.sellerDescription ? 'sellerDescription-error' : undefined}
+              disabled={isLoading}
             />
             {errors.sellerDescription && (
               <p id="sellerDescription-error" role="alert" className="text-sm text-red-400">
@@ -256,10 +238,7 @@ export function VehicleForm({
 
           {/* User Question */}
           <div className="space-y-2">
-            <Label
-              htmlFor="userQuestion"
-              className="flex items-center gap-2 text-slate-300"
-            >
+            <Label htmlFor="userQuestion" className="flex items-center gap-2 text-slate-300">
               <HelpCircle className="h-4 w-4 text-blue-400" />
               Ваше запитання до AI експерта
             </Label>
@@ -273,6 +252,7 @@ export function VehicleForm({
               className="border-slate-600 bg-slate-700/50 resize-none"
               aria-invalid={!!errors.userQuestion}
               aria-describedby={errors.userQuestion ? 'userQuestion-error' : undefined}
+              disabled={isLoading}
             />
             {errors.userQuestion && (
               <p id="userQuestion-error" role="alert" className="text-sm text-red-400">
@@ -282,13 +262,13 @@ export function VehicleForm({
           </div>
 
           {/* Submit Error */}
-          {errors.submit && (
+          {submitError && (
             <div
               role="alert"
               aria-live="assertive"
               className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400"
             >
-              {errors.submit}
+              {submitError}
             </div>
           )}
 
@@ -316,4 +296,3 @@ export function VehicleForm({
     </Card>
   );
 }
-

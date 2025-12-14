@@ -1,22 +1,38 @@
 'use client';
 
-import { useState } from 'react';
-import { VehicleForm, AnalysisResult } from '@/features/vehicle-analysis';
-import type { AnalysisResultType } from '@/features/vehicle-analysis';
+import { useState, useCallback } from 'react';
+import { VehicleForm, AnalysisResult, useVehicleAnalysis } from '@/features/vehicle-analysis';
+import type { VehicleFormData } from '@/features/vehicle-analysis';
 
 export default function HomePage() {
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResultType | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleAnalysisComplete = (result: AnalysisResultType) => {
-    setAnalysisResult(result);
-    setIsLoading(false);
-  };
+  const {
+    startAnalysis,
+    decodedVIN,
+    streamedText,
+    isDecodingVIN,
+    isStreaming,
+    isLoading,
+    error: analysisError,
+    stop,
+  } = useVehicleAnalysis({
+    onError: (err) => setError(err),
+    onComplete: () => {
+      // Analysis complete
+    },
+  });
 
-  const handleAnalysisStart = () => {
-    setIsLoading(true);
-    setAnalysisResult(null);
-  };
+  const handleFormSubmit = useCallback(
+    async (formData: VehicleFormData) => {
+      setError(null);
+      await startAnalysis(formData);
+    },
+    [startAnalysis]
+  );
+
+  // Combine errors
+  const displayError = error || analysisError;
 
   return (
     <div className="container mx-auto px-4 py-8 md:py-12">
@@ -29,8 +45,8 @@ export default function HomePage() {
           </span>
         </h1>
         <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-          Штучний інтелект проаналізує VIN, історію моделі та стан автомобіля, щоб
-          надати об&apos;єктивну рекомендацію: купувати чи шукати далі.
+          Штучний інтелект проаналізує VIN, історію моделі та стан автомобіля, щоб надати об&apos;єктивну рекомендацію:
+          купувати чи шукати далі.
         </p>
       </section>
 
@@ -38,16 +54,18 @@ export default function HomePage() {
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         {/* Left Column - Form */}
         <div className="lg:sticky lg:top-24">
-          <VehicleForm
-            onAnalysisComplete={handleAnalysisComplete}
-            onAnalysisStart={handleAnalysisStart}
-            isLoading={isLoading}
-          />
+          <VehicleForm onSubmit={handleFormSubmit} isLoading={isLoading} error={displayError} />
         </div>
 
         {/* Right Column - Results */}
         <div>
-          <AnalysisResult result={analysisResult} isLoading={isLoading} />
+          <AnalysisResult
+            decodedVIN={decodedVIN}
+            streamedText={streamedText}
+            isDecodingVIN={isDecodingVIN}
+            isStreaming={isStreaming}
+            onStop={stop}
+          />
         </div>
       </div>
     </div>

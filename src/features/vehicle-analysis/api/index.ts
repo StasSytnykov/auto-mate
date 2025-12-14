@@ -1,3 +1,3 @@
 export { decodeVIN } from './decode-vin';
-export { analyzeVehicle } from './analyze-vehicle';
-
+export { SYSTEM_INSTRUCTION, buildPrompt } from './analyze-vehicle';
+export { useVehicleAnalysis } from './use-vehicle-analysis';

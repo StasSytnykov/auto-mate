@@ -2,16 +2,19 @@
 
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Wrench, Clock, Car, MapPin, Fuel, Settings, Copy, Check, Share2 } from 'lucide-react';
+import { Wrench, Clock, Car, MapPin, Fuel, Settings, Copy, Check, Share2, StopCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Button } from '@/shared/ui/button';
-import { AnalysisResult as AnalysisResultType, DecodedVIN } from '../model/types';
+import { DecodedVIN } from '../model/types';
 
 interface AnalysisResultProps {
-  result: AnalysisResultType | null;
-  isLoading: boolean;
+  decodedVIN: DecodedVIN | null;
+  streamedText: string;
+  isDecodingVIN: boolean;
+  isStreaming: boolean;
+  onStop?: () => void;
 }
 
 function DecodedVINCard({ vin }: { vin: DecodedVIN }) {
@@ -54,7 +57,7 @@ function DecodedVINCard({ vin }: { vin: DecodedVIN }) {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {specs.map((spec, index) => (
             <div key={index} className="flex items-start gap-2">
-              <spec.icon className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" />
+              <spec.icon className="h-4 w-4 text-blue-400 mt-0.5 shrink-0" aria-hidden="true" />
               <div>
                 <p className="text-xs text-slate-500">{spec.label}</p>
                 <p className="text-sm text-slate-200">
@@ -84,7 +87,6 @@ function DecodedVINCard({ vin }: { vin: DecodedVIN }) {
           </div>
         )}
 
-        {/* Info about local decoding */}
         {isLocalDecoding && !hasWarnings && (
           <div className="mt-4 rounded-lg border border-blue-500/30 bg-blue-500/10 p-3">
             <p className="text-sm text-blue-400">
@@ -98,37 +100,26 @@ function DecodedVINCard({ vin }: { vin: DecodedVIN }) {
   );
 }
 
-function AnalysisSkeleton() {
+function VINDecodingSkeleton() {
   return (
-    <div className="space-y-6">
-      <Card className="border-slate-700/50 bg-slate-800/30">
-        <CardHeader>
-          <Skeleton className="h-6 w-48 bg-slate-700" />
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid grid-cols-3 gap-4">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i}>
-                <Skeleton className="h-3 w-16 bg-slate-700 mb-2" />
-                <Skeleton className="h-4 w-24 bg-slate-700" />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="border-slate-700/50 bg-slate-800/30">
-        <CardContent className="pt-6 space-y-4">
-          <Skeleton className="h-6 w-64 bg-slate-700" />
-          <Skeleton className="h-4 w-full bg-slate-700" />
-          <Skeleton className="h-4 w-full bg-slate-700" />
-          <Skeleton className="h-4 w-3/4 bg-slate-700" />
-          <Skeleton className="h-6 w-48 bg-slate-700 mt-6" />
-          <Skeleton className="h-4 w-full bg-slate-700" />
-          <Skeleton className="h-4 w-full bg-slate-700" />
-          <Skeleton className="h-4 w-2/3 bg-slate-700" />
-        </CardContent>
-      </Card>
-    </div>
+    <Card className="border-slate-700/50 bg-slate-800/30 mb-6">
+      <CardHeader className="pb-3">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+          <Skeleton className="h-5 w-40 bg-slate-700" />
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i}>
+              <Skeleton className="h-3 w-16 bg-slate-700 mb-2" />
+              <Skeleton className="h-4 w-24 bg-slate-700" />
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -137,7 +128,7 @@ function EmptyState() {
     <Card className="border-slate-700/50 bg-slate-800/30 border-dashed">
       <CardContent className="flex flex-col items-center justify-center py-16 text-center">
         <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-slate-700/50">
-          <Wrench className="h-8 w-8 text-slate-500" />
+          <Wrench className="h-8 w-8 text-slate-500" aria-hidden="true" />
         </div>
         <h3 className="text-lg font-medium text-slate-300 mb-2">Результат аналізу з&apos;явиться тут</h3>
         <p className="text-sm text-slate-500 max-w-sm">
@@ -148,33 +139,34 @@ function EmptyState() {
   );
 }
 
-export function AnalysisResult({ result, isLoading }: AnalysisResultProps) {
+function TypingCursor() {
+  return <span className="inline-block w-2 h-5 bg-blue-400 animate-pulse ml-1" aria-hidden="true" />;
+}
+
+export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStreaming, onStop }: AnalysisResultProps) {
   const [copied, setCopied] = useState(false);
 
-  if (isLoading) {
-    return <AnalysisSkeleton />;
-  }
+  const hasContent = decodedVIN || streamedText;
+  const isComplete = !isDecodingVIN && !isStreaming && streamedText.length > 0;
 
-  if (!result) {
+  if (!hasContent && !isDecodingVIN && !isStreaming) {
     return <EmptyState />;
   }
 
   const handleCopy = async () => {
     try {
-      // Create a text version of the analysis
       let textContent = '';
 
-      if (result.decodedVIN) {
+      if (decodedVIN) {
         textContent += `=== Декодований VIN ===\n`;
-        textContent += `Марка/Модель: ${result.decodedVIN.make} ${result.decodedVIN.model}\n`;
-        textContent += `Рік: ${result.decodedVIN.year}\n`;
-        textContent += `Країна: ${result.decodedVIN.plantCountry}\n\n`;
+        textContent += `Марка/Модель: ${decodedVIN.make} ${decodedVIN.model}\n`;
+        textContent += `Рік: ${decodedVIN.year}\n`;
+        textContent += `Країна: ${decodedVIN.plantCountry}\n\n`;
       }
 
       textContent += `=== AI Аналіз ===\n\n`;
-      textContent += result.analysis;
-      textContent += `\n\n---\nАналіз виконано: ${new Date(result.timestamp).toLocaleString('uk-UA')}`;
-      textContent += `\nAutoMate - AI Перевірка Автомобілів`;
+      textContent += streamedText;
+      textContent += `\n\n---\nAutoMate - AI Перевірка Автомобілів`;
 
       await navigator.clipboard.writeText(textContent);
       setCopied(true);
@@ -189,87 +181,115 @@ export function AnalysisResult({ result, isLoading }: AnalysisResultProps) {
       try {
         await navigator.share({
           title: 'AutoMate - Аналіз автомобіля',
-          text: `Аналіз ${result.decodedVIN?.make || ''} ${result.decodedVIN?.model || ''} ${
-            result.decodedVIN?.year || ''
-          }`,
+          text: `Аналіз ${decodedVIN?.make || ''} ${decodedVIN?.model || ''} ${decodedVIN?.year || ''}`,
           url: window.location.href,
         });
       } catch {
-        // User cancelled or share failed
         console.log('Share cancelled');
       }
     } else {
-      // Fallback to copy
       handleCopy();
     }
   };
 
-  const articleTitle = result.decodedVIN
-    ? `Аналіз ${result.decodedVIN.make} ${result.decodedVIN.model} ${result.decodedVIN.year || ''}`
+  const articleTitle = decodedVIN
+    ? `Аналіз ${decodedVIN.make} ${decodedVIN.model} ${decodedVIN.year || ''}`
     : 'Аналіз автомобіля';
 
   return (
     <article aria-label={articleTitle} className="space-y-6">
-      {/* Decoded VIN Info */}
-      {result.decodedVIN && (
+      {isDecodingVIN && !decodedVIN && (
+        <section aria-label="Декодування VIN">
+          <VINDecodingSkeleton />
+        </section>
+      )}
+
+      {decodedVIN && (
         <section aria-label="Декодований VIN">
-          <DecodedVINCard vin={result.decodedVIN} />
+          <DecodedVINCard vin={decodedVIN} />
         </section>
       )}
 
       {/* AI Analysis */}
-      <section aria-label="AI Аналіз">
-        <Card className="border-slate-700/50 bg-slate-800/30">
-          <CardHeader className="border-b border-slate-700/50">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg text-slate-200">AI Аналіз</CardTitle>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopy}
-                  className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-                  aria-label={copied ? 'Скопійовано в буфер обміну' : 'Копіювати аналіз'}
-                >
-                  {copied ? (
+      {(isStreaming || streamedText) && (
+        <section aria-label="AI Аналіз">
+          <Card className="border-slate-700/50 bg-slate-800/30">
+            <CardHeader className="border-b border-slate-700/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {isStreaming && <Loader2 className="h-4 w-4 animate-spin text-blue-400" aria-hidden="true" />}
+                  <CardTitle className="text-lg text-slate-200">
+                    AI Аналіз
+                    {isStreaming && <span className="text-sm font-normal text-slate-400 ml-2">(генерується...)</span>}
+                  </CardTitle>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isStreaming && onStop && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={onStop}
+                      className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      aria-label="Зупинити генерацію"
+                    >
+                      <StopCircle className="h-4 w-4 mr-1" aria-hidden="true" />
+                      Зупинити
+                    </Button>
+                  )}
+                  {isComplete && (
                     <>
-                      <Check className="h-4 w-4 mr-1 text-green-400" aria-hidden="true" />
-                      <span className="text-green-400">Скопійовано</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="h-4 w-4 mr-1" aria-hidden="true" />
-                      Копіювати
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCopy}
+                        className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+                        aria-label={copied ? 'Скопійовано в буфер обміну' : 'Копіювати аналіз'}
+                      >
+                        {copied ? (
+                          <>
+                            <Check className="h-4 w-4 mr-1 text-green-400" aria-hidden="true" />
+                            <span className="text-green-400">Скопійовано</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4 mr-1" aria-hidden="true" />
+                            Копіювати
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleShare}
+                        className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
+                        aria-label="Поділитися аналізом"
+                      >
+                        <Share2 className="h-4 w-4 mr-1" aria-hidden="true" />
+                        Поділитися
+                      </Button>
                     </>
                   )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleShare}
-                  className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-                  aria-label="Поділитися аналізом"
-                >
-                  <Share2 className="h-4 w-4 mr-1" aria-hidden="true" />
-                  Поділитися
-                </Button>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="pt-6">
-            <div className="prose prose-invert prose-slate max-w-none prose-headings:text-slate-200 prose-p:text-slate-300 prose-li:text-slate-300 prose-strong:text-slate-200 prose-a:text-blue-400">
-              <ReactMarkdown>{result.analysis}</ReactMarkdown>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <div className="prose prose-invert prose-slate max-w-none prose-headings:text-slate-200 prose-p:text-slate-300 prose-li:text-slate-300 prose-strong:text-slate-200 prose-a:text-blue-400">
+                <ReactMarkdown>{streamedText}</ReactMarkdown>
+                {isStreaming && <TypingCursor />}
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      )}
 
-      {/* Timestamp */}
-      <footer className="text-center">
-        <time dateTime={result.timestamp} className="text-xs text-slate-600">
-          Аналіз виконано: {new Date(result.timestamp).toLocaleString('uk-UA')}
-        </time>
-      </footer>
+      {/* Timestamp - only show when complete */}
+      {isComplete && (
+        <footer className="text-center">
+          <time dateTime={new Date().toISOString()} className="text-xs text-slate-600">
+            Аналіз виконано: {new Date().toLocaleString('uk-UA')}
+          </time>
+        </footer>
+      )}
     </article>
   );
 }

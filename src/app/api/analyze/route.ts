@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { streamText } from 'ai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { Ratelimit } from '@upstash/ratelimit';
 import { Redis } from '@upstash/redis';
 import { vehicleFormSchema } from '@/features/vehicle-analysis/model/schemas';
-import { decodeVIN } from '@/features/vehicle-analysis/api/decode-vin';
-import { analyzeVehicle } from '@/features/vehicle-analysis/api/analyze-vehicle';
-import { AnalysisResult } from '@/features/vehicle-analysis/model/types';
+import { SYSTEM_INSTRUCTION, buildPrompt } from '@/features/vehicle-analysis/api/analyze-vehicle';
+import { DecodedVIN } from '@/features/vehicle-analysis/model/types';
 
-// Rate limiting: 5 requests per IP per 24 hours
-// Only initialize if Redis credentials are available (production)
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
 const ratelimit =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Ratelimit({
@@ -18,11 +21,7 @@ const ratelimit =
     : null;
 
 export async function POST(request: NextRequest) {
-  // Track rate limit remaining for response headers
-  let rateLimitRemaining: number | null = null;
-
   try {
-    // Apply rate limiting if configured
     if (ratelimit) {
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
       const { success, remaining, reset } = await ratelimit.limit(ip);
@@ -48,12 +47,11 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      rateLimitRemaining = remaining;
+      console.log(`Rate limit remaining: ${remaining}`);
     }
 
     const body = await request.json();
 
-    // Validate input
     const validationResult = vehicleFormSchema.safeParse(body);
 
     if (!validationResult.success) {
@@ -67,32 +65,17 @@ export async function POST(request: NextRequest) {
     }
 
     const formData = validationResult.data;
+    const decodedVIN: DecodedVIN | null = body.decodedVIN || null;
 
-    // Decode VIN
-    let decodedVIN = null;
-    try {
-      decodedVIN = await decodeVIN(formData.vin);
-    } catch (error) {
-      console.error('VIN decode error:', error);
-      // Continue without decoded VIN data
-    }
+    const prompt = buildPrompt(formData, decodedVIN);
 
-    // Analyze vehicle with AI
-    const analysis = await analyzeVehicle(formData, decodedVIN);
+    const result = streamText({
+      model: google('gemini-2.5-flash'),
+      system: SYSTEM_INSTRUCTION,
+      prompt: prompt,
+    });
 
-    const result: AnalysisResult = {
-      decodedVIN,
-      analysis,
-      timestamp: new Date().toISOString(),
-    };
-
-    // Include rate limit info in response headers if available
-    const headers: Record<string, string> = {};
-    if (rateLimitRemaining !== null) {
-      headers['X-RateLimit-Remaining'] = rateLimitRemaining.toString();
-    }
-
-    return NextResponse.json(result, { headers });
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error('Analysis error:', error);
 

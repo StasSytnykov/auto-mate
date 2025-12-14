@@ -1,7 +1,6 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import { DecodedVIN, VehicleFormData } from '../model/types';
 
-const SYSTEM_INSTRUCTION = `
+export const SYSTEM_INSTRUCTION = `
 Ти - досвідчений, цинічний та чесний експерт з підбору автомобілів з 15+ роками досвіду. 
 Ти добре знаєш ринок України, Європи та США, специфіку ремонту та обслуговування.
 Твоя мета - захистити покупця від купівлі проблемного авто, надавши максимально корисну інформацію.
@@ -88,7 +87,8 @@ const SYSTEM_INSTRUCTION = `
 Спілкуйся українською. Будь конкретним, давай числа та факти. Не води воду — покупець платить за чіткі відповіді.
 `;
 
-function buildPrompt(formData: VehicleFormData, decodedVIN: DecodedVIN | null): string {
+// Exported for use in streaming endpoint
+export function buildPrompt(formData: VehicleFormData, decodedVIN: DecodedVIN | null): string {
   let prompt = '## Дані про автомобіль\n\n';
 
   prompt += `**VIN код:** ${formData.vin}\n`;
@@ -175,26 +175,4 @@ function buildPrompt(formData: VehicleFormData, decodedVIN: DecodedVIN | null): 
   prompt += '\n---\n\nПроаналізуй цей автомобіль детально та надай структуровані рекомендації згідно формату.';
 
   return prompt;
-}
-
-export async function analyzeVehicle(formData: VehicleFormData, decodedVIN: DecodedVIN | null): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not configured');
-  }
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-2.5-flash',
-    systemInstruction: SYSTEM_INSTRUCTION,
-  });
-
-  const prompt = buildPrompt(formData, decodedVIN);
-
-  const result = await model.generateContent(prompt);
-  const response = result.response;
-  const text = response.text();
-
-  return text;
 }
