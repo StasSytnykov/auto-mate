@@ -1,9 +1,13 @@
+export type FuelType = 'petrol' | 'diesel' | 'gas' | 'hybrid' | 'electric';
+
 export interface VehicleFormData {
   vin: string;
   makeModel?: string;
   year?: number;
   mileage?: number;
   price?: number;
+  fuelType?: FuelType;
+  engineCapacity?: number;
   sellerDescription?: string;
   userQuestion?: string;
 }

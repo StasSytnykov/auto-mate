@@ -1,14 +1,18 @@
 'use client';
 
-import { useState } from 'react';
-import { Car, HelpCircle, Loader2 } from 'lucide-react';
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Textarea } from '@/shared/ui/textarea';
-import { Label } from '@/shared/ui/label';
+import { Car } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
-import { vehicleFormSchema } from '../model/schemas';
-import { VehicleFormData } from '../model/types';
+import { VehicleFormData, FuelType } from '../model/types';
+import {
+  VinField,
+  VehicleInfoFields,
+  PriceAndMileageFields,
+  EngineFields,
+  DescriptionFields,
+  SubmitButton,
+  FormError,
+  useVehicleForm,
+} from './form';
 
 interface VehicleFormProps {
   onSubmit: (formData: VehicleFormData) => Promise<void>;
@@ -17,67 +21,9 @@ interface VehicleFormProps {
 }
 
 export function VehicleForm({ onSubmit, isLoading, error: externalError }: VehicleFormProps) {
-  const [formData, setFormData] = useState<Partial<VehicleFormData>>({
-    vin: '',
-    makeModel: '',
-    year: undefined,
-    mileage: undefined,
-    price: undefined,
-    sellerDescription: '',
-    userQuestion: '',
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { formData, errors, handleInputChange, handleTextareaChange, handleSelectChange, handleSubmit } =
+    useVehicleForm({ onSubmit });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value, type } = e.target;
-
-    let parsedValue: string | number | undefined = value;
-
-    if (type === 'number' && value !== '') {
-      parsedValue = parseFloat(value);
-    } else if (type === 'number' && value === '') {
-      parsedValue = undefined;
-    }
-
-    setFormData((prev) => ({
-      ...prev,
-      [name]: parsedValue,
-    }));
-
-    // Clear erro for this field
-    if (errors[name]) {
-      setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[name];
-        return newErrors;
-      });
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    const result = vehicleFormSchema.safeParse(formData);
-
-    if (!result.success) {
-      const fieldErrors: Record<string, string> = {};
-      result.error.issues.forEach((err) => {
-        if (err.path[0]) {
-          fieldErrors[err.path[0] as string] = err.message;
-        }
-      });
-      setErrors(fieldErrors);
-      return;
-    }
-
-    // Clear previous errors
-    setErrors({});
-
-    // Call the parent's onSubmit with validated data
-    await onSubmit(result.data);
-  };
-
-  // Combine external and internal errors
   const submitError = externalError || errors.submit;
 
   return (
@@ -92,205 +38,50 @@ export function VehicleForm({ onSubmit, isLoading, error: externalError }: Vehic
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-          {/* VIN Code - Required */}
-          <div className="space-y-2">
-            <Label htmlFor="vin" className="text-slate-300">
-              VIN Код{' '}
-              <span className="text-red-400" aria-label="обов'язкове поле">
-                *
-              </span>
-            </Label>
-            <Input
-              id="vin"
-              name="vin"
-              placeholder="ВВЕДІТЬ 17-ЗНАЧНИЙ VIN"
-              value={formData.vin || ''}
-              onChange={handleChange}
-              maxLength={17}
-              className="border-slate-600 bg-slate-700/50 font-mono uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal"
-              aria-invalid={!!errors.vin}
-              aria-describedby={errors.vin ? 'vin-error' : undefined}
-              required
-              disabled={isLoading}
-            />
-            {errors.vin && (
-              <p id="vin-error" role="alert" className="text-sm text-red-400">
-                {errors.vin}
-              </p>
-            )}
-          </div>
+          <VinField value={formData.vin || ''} onChange={handleInputChange} error={errors.vin} disabled={isLoading} />
 
-          {/* Make & Model + Year */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="makeModel" className="text-slate-300">
-                Марка та Модель
-              </Label>
-              <Input
-                id="makeModel"
-                name="makeModel"
-                placeholder="напр. Volkswagen Passat"
-                value={formData.makeModel || ''}
-                onChange={handleChange}
-                className="border-slate-600 bg-slate-700/50"
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="year" className="text-slate-300">
-                Рік випуску
-              </Label>
-              <Input
-                id="year"
-                name="year"
-                type="number"
-                placeholder="напр. 2018"
-                value={formData.year || ''}
-                onChange={handleChange}
-                min={1980}
-                max={new Date().getFullYear() + 1}
-                className="border-slate-600 bg-slate-700/50"
-                aria-invalid={!!errors.year}
-                aria-describedby={errors.year ? 'year-error' : undefined}
-                disabled={isLoading}
-              />
-              {errors.year && (
-                <p id="year-error" role="alert" className="text-sm text-red-400">
-                  {errors.year}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Mileage + Price */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="mileage" className="text-slate-300">
-                Пробіг (км)
-              </Label>
-              <Input
-                id="mileage"
-                name="mileage"
-                type="number"
-                placeholder="напр. 180000"
-                value={formData.mileage || ''}
-                onChange={handleChange}
-                min={0}
-                className="border-slate-600 bg-slate-700/50"
-                aria-invalid={!!errors.mileage}
-                aria-describedby={errors.mileage ? 'mileage-error' : undefined}
-                disabled={isLoading}
-              />
-              {errors.mileage && (
-                <p id="mileage-error" role="alert" className="text-sm text-red-400">
-                  {errors.mileage}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="price" className="text-slate-300">
-                Ціна ($)
-              </Label>
-              <Input
-                id="price"
-                name="price"
-                type="number"
-                placeholder="напр. 14500"
-                value={formData.price || ''}
-                onChange={handleChange}
-                min={0}
-                className="border-slate-600 bg-slate-700/50"
-                aria-invalid={!!errors.price}
-                aria-describedby={errors.price ? 'price-error' : undefined}
-                disabled={isLoading}
-              />
-              {errors.price && (
-                <p id="price-error" role="alert" className="text-sm text-red-400">
-                  {errors.price}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Seller Description */}
-          <div className="space-y-2">
-            <Label htmlFor="sellerDescription" className="text-slate-300">
-              Опис продавця / Деталі стану <span className="text-slate-500">(скопіюйте опис з оголошення сюди)</span>
-            </Label>
-            <Textarea
-              id="sellerDescription"
-              name="sellerDescription"
-              placeholder="Продавець пише: не бита, замінено масло, є нюанс по крилу..."
-              value={formData.sellerDescription || ''}
-              onChange={handleChange}
-              rows={4}
-              className="border-slate-600 bg-slate-700/50 resize-none"
-              aria-invalid={!!errors.sellerDescription}
-              aria-describedby={errors.sellerDescription ? 'sellerDescription-error' : undefined}
-              disabled={isLoading}
-            />
-            {errors.sellerDescription && (
-              <p id="sellerDescription-error" role="alert" className="text-sm text-red-400">
-                {errors.sellerDescription}
-              </p>
-            )}
-          </div>
-
-          {/* User Question */}
-          <div className="space-y-2">
-            <Label htmlFor="userQuestion" className="flex items-center gap-2 text-slate-300">
-              <HelpCircle className="h-4 w-4 text-blue-400" />
-              Ваше запитання до AI експерта
-            </Label>
-            <Textarea
-              id="userQuestion"
-              name="userQuestion"
-              placeholder="напр. Чи надійний тут автомат? Чи дорога вона в обслуговуванні?"
-              value={formData.userQuestion || ''}
-              onChange={handleChange}
-              rows={2}
-              className="border-slate-600 bg-slate-700/50 resize-none"
-              aria-invalid={!!errors.userQuestion}
-              aria-describedby={errors.userQuestion ? 'userQuestion-error' : undefined}
-              disabled={isLoading}
-            />
-            {errors.userQuestion && (
-              <p id="userQuestion-error" role="alert" className="text-sm text-red-400">
-                {errors.userQuestion}
-              </p>
-            )}
-          </div>
-
-          {/* Submit Error */}
-          {submitError && (
-            <div
-              role="alert"
-              aria-live="assertive"
-              className="rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-sm text-red-400"
-            >
-              {submitError}
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <Button
-            type="submit"
+          <VehicleInfoFields
+            makeModel={formData.makeModel || ''}
+            year={formData.year}
+            onMakeModelChange={handleInputChange}
+            onYearChange={handleInputChange}
+            yearError={errors.year}
             disabled={isLoading}
-            className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-medium py-6"
-            size="lg"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Аналізую...
-              </>
-            ) : (
-              <>
-                <Car className="mr-2 h-5 w-5" />
-                Аналізувати авто
-              </>
-            )}
-          </Button>
+          />
+
+          <PriceAndMileageFields
+            mileage={formData.mileage}
+            price={formData.price}
+            onMileageChange={handleInputChange}
+            onPriceChange={handleInputChange}
+            mileageError={errors.mileage}
+            priceError={errors.price}
+            disabled={isLoading}
+          />
+
+          <EngineFields
+            fuelType={formData.fuelType as FuelType | undefined}
+            engineCapacity={formData.engineCapacity}
+            onFuelTypeChange={(value) => handleSelectChange('fuelType', value)}
+            onEngineCapacityChange={handleInputChange}
+            fuelTypeError={errors.fuelType}
+            engineCapacityError={errors.engineCapacity}
+            disabled={isLoading}
+          />
+
+          <DescriptionFields
+            sellerDescription={formData.sellerDescription || ''}
+            userQuestion={formData.userQuestion || ''}
+            onSellerDescriptionChange={handleTextareaChange}
+            onUserQuestionChange={handleTextareaChange}
+            sellerDescriptionError={errors.sellerDescription}
+            userQuestionError={errors.userQuestion}
+            disabled={isLoading}
+          />
+
+          <FormError error={submitError} />
+
+          <SubmitButton isLoading={isLoading} />
         </form>
       </CardContent>
     </Card>
