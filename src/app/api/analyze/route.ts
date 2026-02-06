@@ -11,7 +11,7 @@ const google = createGoogleGenerativeAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
 
-const ratelimit =
+const rateLimit =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Ratelimit({
         redis: Redis.fromEnv(),
@@ -22,9 +22,9 @@ const ratelimit =
 
 export async function POST(request: NextRequest) {
   try {
-    if (ratelimit) {
+    if (rateLimit) {
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
-      const { success, remaining, reset } = await ratelimit.limit(ip);
+      const { success, remaining, reset } = await rateLimit.limit(ip);
 
       if (!success) {
         const resetDate = new Date(reset);
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        message: process.env.NODE_ENV === 'production' ? 'Сталася помилка при аналізі' : (error instanceof Error ? error.message : 'Unknown error'),
       },
       { status: 500 }
     );
