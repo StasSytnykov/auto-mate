@@ -15,6 +15,7 @@ interface UseVehicleFormReturn {
   handleTextareaChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
   handleSubmit: (e: React.FormEvent) => Promise<void>;
+  setFormFields: (fields: Partial<VehicleFormData>) => void;
 }
 
 const INITIAL_FORM_DATA: Partial<VehicleFormData> = {
@@ -90,6 +91,21 @@ export function useVehicleForm({ onSubmit }: UseVehicleFormOptions): UseVehicleF
     [clearFieldError]
   );
 
+  const setFormFields = useCallback((fields: Partial<VehicleFormData>) => {
+    setFormData((prev) => {
+      const updated = { ...prev };
+      for (const [key, value] of Object.entries(fields)) {
+        if (value !== undefined && value !== '' && value !== 'Невідомо' && value !== 0) {
+          const currentValue = updated[key as keyof VehicleFormData];
+          if (!currentValue && currentValue !== 0) {
+            (updated as Record<string, unknown>)[key] = value;
+          }
+        }
+      }
+      return updated;
+    });
+  }, []);
+
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
@@ -120,5 +136,6 @@ export function useVehicleForm({ onSubmit }: UseVehicleFormOptions): UseVehicleF
     handleTextareaChange,
     handleSelectChange,
     handleSubmit,
+    setFormFields,
   };
 }

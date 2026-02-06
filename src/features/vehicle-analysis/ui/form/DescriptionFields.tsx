@@ -33,6 +33,7 @@ export function DescriptionFields({
         onChange={onSellerDescriptionChange}
         placeholder="Продавець пише: не бита, замінено масло, є нюанс по крилу..."
         rows={4}
+        maxLength={5000}
         error={sellerDescriptionError}
         disabled={disabled}
         labelSuffix={<span className="text-slate-500">(скопіюйте опис з оголошення сюди)</span>}
@@ -45,6 +46,7 @@ export function DescriptionFields({
         onChange={onUserQuestionChange}
         placeholder="напр. Чи надійний тут автомат? Чи дорога вона в обслуговуванні?"
         rows={2}
+        maxLength={1000}
         error={userQuestionError}
         disabled={disabled}
         labelIcon={<HelpCircle className="h-4 w-4 text-blue-400" />}

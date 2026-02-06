@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { VehicleForm, AnalysisResult, useVehicleAnalysis } from '@/features/vehicle-analysis';
 import type { VehicleFormData } from '@/features/vehicle-analysis';
 
 export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const lastFormDataRef = useRef<VehicleFormData | null>(null);
 
   const {
     startAnalysis,
@@ -26,10 +28,24 @@ export default function HomePage() {
   const handleFormSubmit = useCallback(
     async (formData: VehicleFormData) => {
       setError(null);
+      lastFormDataRef.current = formData;
+
+      // Scroll to results on mobile/desktop
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+
       await startAnalysis(formData);
     },
     [startAnalysis]
   );
+
+  const handleRetry = useCallback(() => {
+    if (lastFormDataRef.current) {
+      setError(null);
+      startAnalysis(lastFormDataRef.current);
+    }
+  }, [startAnalysis]);
 
   // Combine errors
   const displayError = error || analysisError;
@@ -54,17 +70,24 @@ export default function HomePage() {
       <div className="grid lg:grid-cols-2 gap-8 items-start">
         {/* Left Column - Form */}
         <div className="lg:sticky lg:top-24">
-          <VehicleForm onSubmit={handleFormSubmit} isLoading={isLoading} error={displayError} />
+          <VehicleForm
+            onSubmit={handleFormSubmit}
+            isLoading={isLoading}
+            error={displayError}
+            decodedVIN={decodedVIN}
+          />
         </div>
 
         {/* Right Column - Results */}
-        <div>
+        <div ref={resultsRef}>
           <AnalysisResult
             decodedVIN={decodedVIN}
             streamedText={streamedText}
             isDecodingVIN={isDecodingVIN}
             isStreaming={isStreaming}
             onStop={stop}
+            onRetry={handleRetry}
+            error={displayError}
           />
         </div>
       </div>

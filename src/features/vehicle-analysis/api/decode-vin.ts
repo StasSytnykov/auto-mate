@@ -264,10 +264,17 @@ export async function decodeVIN(vin: string): Promise<DecodedVIN> {
   const localCountry = getCountryFromWMI(upperVIN);
   const checksumValid = validateVINChecksum(upperVIN);
 
-  // Try NHTSA API
+  // Try NHTSA API with timeout
   let nhtsaData: Record<string, string> | null = null;
   try {
-    const response = await fetch(`${NHTSA_API_URL}/${upperVIN}?format=json`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    const response = await fetch(`${NHTSA_API_URL}/${upperVIN}?format=json`, {
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
 
     if (response.ok) {
       const data: NHTSAResponse = await response.json();

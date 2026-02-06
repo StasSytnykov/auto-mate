@@ -20,6 +20,7 @@ export interface FormTextareaProps {
   textareaClassName?: string;
   labelIcon?: React.ReactNode;
   labelSuffix?: React.ReactNode;
+  maxLength?: number;
 }
 
 export function FormTextarea({
@@ -38,9 +39,11 @@ export function FormTextarea({
   textareaClassName,
   labelIcon,
   labelSuffix,
+  maxLength,
 }: FormTextareaProps) {
   const errorId = `${id}-error`;
   const hintId = `${id}-hint`;
+  const currentLength = (value ?? '').length;
 
   return (
     <FormField
@@ -60,12 +63,18 @@ export function FormTextarea({
         value={value ?? ''}
         onChange={onChange}
         rows={rows}
+        maxLength={maxLength}
         className={`border-slate-600 bg-slate-700/50 resize-none ${textareaClassName || ''}`}
         aria-invalid={!!error}
         aria-describedby={error ? errorId : hint ? hintId : undefined}
         required={required}
         disabled={disabled}
       />
+      {maxLength && (
+        <p className="mt-1 text-xs text-slate-500 text-right">
+          {currentLength}/{maxLength}
+        </p>
+      )}
     </FormField>
   );
 }

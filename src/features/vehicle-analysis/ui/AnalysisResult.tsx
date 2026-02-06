@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Wrench, Clock, Car, MapPin, Fuel, Settings, Copy, Check, Share2, StopCircle, Loader2 } from 'lucide-react';
+import { Wrench, Clock, Car, MapPin, Fuel, Settings, Copy, Check, Share2, StopCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -15,6 +15,8 @@ interface AnalysisResultProps {
   isDecodingVIN: boolean;
   isStreaming: boolean;
   onStop?: () => void;
+  onRetry?: () => void;
+  error?: string | null;
 }
 
 function DecodedVINCard({ vin }: { vin: DecodedVIN }) {
@@ -143,7 +145,7 @@ function TypingCursor() {
   return <span className="inline-block w-2 h-5 bg-blue-400 animate-pulse ml-1" aria-hidden="true" />;
 }
 
-export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStreaming, onStop }: AnalysisResultProps) {
+export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStreaming, onStop, onRetry, error }: AnalysisResultProps) {
   const [copied, setCopied] = useState(false);
 
   const hasContent = decodedVIN || streamedText;
@@ -280,6 +282,24 @@ export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStre
             </CardContent>
           </Card>
         </section>
+      )}
+
+      {/* Error with retry */}
+      {error && !isStreaming && onRetry && (
+        <Card className="border-red-500/30 bg-red-500/10">
+          <CardContent className="flex flex-col items-center py-6 text-center">
+            <p className="text-sm text-red-400 mb-4">{error}</p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRetry}
+              className="border-red-500/30 text-red-400 hover:bg-red-500/10"
+            >
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Спробувати знову
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* Timestamp - only show when complete */}
