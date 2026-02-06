@@ -8,6 +8,7 @@ import { Badge } from '@/shared/ui/badge';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { Button } from '@/shared/ui/button';
 import { DecodedVIN } from '../model/types';
+import { FeedbackWidget } from './FeedbackWidget';
 
 interface AnalysisResultProps {
   decodedVIN: DecodedVIN | null;
@@ -239,7 +240,6 @@ export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStre
                     </Button>
                   )}
                   {isComplete && (
-                    <>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -259,17 +259,6 @@ export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStre
                           </>
                         )}
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={handleShare}
-                        className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"
-                        aria-label="Поділитися аналізом"
-                      >
-                        <Share2 className="h-4 w-4 mr-1" aria-hidden="true" />
-                        Поділитися
-                      </Button>
-                    </>
                   )}
                 </div>
               </div>
@@ -309,6 +298,12 @@ export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStre
             Аналіз виконано: {new Date().toLocaleString('uk-UA')}
           </time>
         </footer>
+      )}
+
+      {isComplete && (
+        <FeedbackWidget
+          vehicle={decodedVIN ? `${decodedVIN.make} ${decodedVIN.model} ${decodedVIN.year || ''}`.trim() : undefined}
+        />
       )}
     </article>
   );

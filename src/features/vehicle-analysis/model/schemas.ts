@@ -27,3 +27,9 @@ export const vehicleFormSchema = z.object({
 });
 
 export type VehicleFormSchema = z.infer<typeof vehicleFormSchema>;
+
+export const feedbackSchema = z.object({
+  rating: z.enum(['positive', 'negative']),
+  comment: z.string().max(500, 'Коментар занадто довгий').optional(),
+  vehicle: z.string().max(100).optional(),
+});

@@ -48,3 +48,11 @@ export interface StreamingAnalysisState {
 }
 
 export type RecommendationType = 'recommend' | 'caution' | 'not_recommend';
+
+export type FeedbackRating = 'positive' | 'negative';
+
+export interface FeedbackData {
+  rating: FeedbackRating;
+  comment?: string;
+  vehicle?: string;
+}
