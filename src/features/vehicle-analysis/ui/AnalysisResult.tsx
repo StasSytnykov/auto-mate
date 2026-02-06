@@ -264,7 +264,7 @@ export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStre
               </div>
             </CardHeader>
             <CardContent className="pt-6">
-              <div className="prose prose-invert prose-slate max-w-none prose-headings:text-slate-200 prose-p:text-slate-300 prose-li:text-slate-300 prose-strong:text-slate-200 prose-a:text-blue-400">
+              <div className="prose prose-invert prose-slate max-w-none prose-headings:text-slate-200 prose-p:text-slate-300 prose-li:text-slate-300 prose-strong:text-slate-200 prose-a:text-blue-400 prose-hr:border-slate-700/50 prose-blockquote:text-slate-400 prose-blockquote:border-slate-600/50">
                 <ReactMarkdown>{streamedText}</ReactMarkdown>
                 {isStreaming && <TypingCursor />}
               </div>
