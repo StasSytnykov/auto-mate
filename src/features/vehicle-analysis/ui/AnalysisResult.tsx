@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Wrench, Clock, Car, MapPin, Fuel, Settings, Copy, Check, Share2, StopCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Wrench, Clock, Car, MapPin, Fuel, Settings, Copy, Check, StopCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Badge } from '@/shared/ui/badge';
 import { Skeleton } from '@/shared/ui/skeleton';
@@ -179,21 +179,6 @@ export function AnalysisResult({ decodedVIN, streamedText, isDecodingVIN, isStre
     }
   };
 
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'AutoMate - Аналіз автомобіля',
-          text: `Аналіз ${decodedVIN?.make || ''} ${decodedVIN?.model || ''} ${decodedVIN?.year || ''}`,
-          url: window.location.href,
-        });
-      } catch {
-        console.log('Share cancelled');
-      }
-    } else {
-      handleCopy();
-    }
-  };
 
   const articleTitle = decodedVIN
     ? `Аналіз ${decodedVIN.make} ${decodedVIN.model} ${decodedVIN.year || ''}`

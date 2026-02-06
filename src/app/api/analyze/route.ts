@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
   try {
     if (rateLimit) {
       const ip = request.headers.get('x-forwarded-for')?.split(',')[0] ?? '127.0.0.1';
-      const { success, remaining, reset } = await rateLimit.limit(ip);
+      const { success, reset } = await rateLimit.limit(ip);
 
       if (!success) {
         const resetDate = new Date(reset);
@@ -47,7 +47,6 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log(`Rate limit remaining: ${remaining}`);
     }
 
     const body = await request.json();
