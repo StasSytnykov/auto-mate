@@ -73,6 +73,7 @@ export async function POST(request: NextRequest) {
       model: google('gemini-2.5-flash'),
       system: SYSTEM_INSTRUCTION,
       prompt: prompt,
+      temperature: 0.7,
     });
 
     return result.toTextStreamResponse();

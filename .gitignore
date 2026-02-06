@@ -44,3 +44,6 @@ next-env.d.ts
 # IDE
 .history/
 .cursor/commands/
+.idea
+
+project-idea.md
